@@ -273,9 +273,10 @@
 <div id="tabs">
     <button class="tab-btn active" onclick="showTab('dash', this)">📊 Dashboard</button>
     <button class="tab-btn" onclick="showTab('dtc', this)">⚠️ Diagnostics</button>
-    <button class="tab-btn" onclick="showTab('readiness', this)">✓ Readiness</button>
+    <button class="tab-btn" onclick="showTab('monitoring', this)">🔬 Monitoring</button>
+    <button class="tab-btn" onclick="showTab('readiness', this)">✔ Readiness</button>
     <button class="tab-btn" onclick="showTab('freezeframe', this)">📸 Freeze Frame</button>
-    <button class="tab-btn" onclick="showTab('vin', this)">🚗 VIN</button>        <!-- NEW -->
+    <button class="tab-btn" onclick="showTab('vin', this)">🚗 VIN</button>
     <button class="tab-btn" onclick="showTab('recorder', this)">📈 Data Logger</button>
     <button class="tab-btn" onclick="showTab('config', this)">⚙️ Config</button>
     <button class="tab-btn" onclick="showTab('logs', this)">📜 Logs</button>
@@ -364,16 +365,41 @@
         </div>
     </div>
 
+    <!-- MONITORING VIEW (Mode 06) -->
+    <div id="monitoring" class="view">
+        <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; gap: 8px;">
+            <button class="btn-primary" onclick="readMonitoring()" style="flex: 1;">
+                🔬 Read Test Results
+            </button>
+            <button class="btn-secondary" onclick="exportMonitoring()">
+                💾 Export
+            </button>
+        </div>
+        <div id="monitoring-list" style="flex: 1; overflow-y: auto;">
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 48px; margin-bottom: 12px;">🔬</div>
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+                    On-Board Test Monitoring
+                </div>
+                <div style="font-size: 12px; line-height: 1.5;">
+                    Advanced component health diagnostics.<br>
+                    See test results before codes trigger.<br>
+                    Click "Read Test Results" to begin deep scan.
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- READINESS MONITORS VIEW -->
     <div id="readiness" class="view">
         <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
             <button class="btn-primary" onclick="readMonitorStatus()">
-                ✓ Check Readiness Status
+                ✔ Check Readiness Status
             </button>
         </div>
         <div id="readiness-list" style="flex: 1; overflow-y: auto;">
             <div style="text-align: center; padding: 40px; color: #666;">
-                <div style="font-size: 48px; margin-bottom: 12px;">✓</div>
+                <div style="font-size: 48px; margin-bottom: 12px;">✔</div>
                 <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">
                     Readiness Monitors
                 </div>
@@ -458,8 +484,8 @@
         <div class="display-box" style="text-align: left;">
             <label style="font-size: 12px; font-weight: 600;">About Gnokestation</label>
             <p style="font-size: 11px; line-height: 1.5; margin: 8px 0; color: #555;">
-                <strong>Version:</strong> 2.4 Professional<br>
-                <strong>Features:</strong> Real-time diagnostics, freeze frame analysis, readiness monitoring, data recording<br>
+                <strong>Version:</strong> 2.5 Professional<br>
+                <strong>Features:</strong> Real-time diagnostics, Mode 06 monitoring, freeze frame analysis, readiness monitoring, data recording<br>
                 <strong>Compatible:</strong> All OBD-II vehicles (1996+)<br>
                 <strong>Hardware:</strong> ELM327 via USB, Bluetooth, or WiFi
             </p>

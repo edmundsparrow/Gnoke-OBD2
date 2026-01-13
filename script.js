@@ -27,7 +27,8 @@ const PLUGINS = [
      'apps/freezeframe.js',
      'plugins/vin.js',
      'apps/recorder.js',
-      'plugins/engine.js',
+     'plugins/engine.js',
+     'plugins/monitoring.js',
 ];
 
 // ============================================================================
