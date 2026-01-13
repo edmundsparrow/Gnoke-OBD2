@@ -15,10 +15,10 @@
 // Optional plugins can be appended below
 // ============================================================================
 const PLUGINS = [
-    'apps/kernel.js',
-    'apps/pids.js',
-    'apps/dashboard.js',
-    'apps/diagnostics.js',
+    'core/kernel.js',
+    'core/pids.js',
+    'core/dashboard.js',
+    'core/diagnostics.js',
     // Optional plugins:
     'apps/timing.js',
      'apps/emissions.js',
