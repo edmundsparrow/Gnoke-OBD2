@@ -6,7 +6,7 @@ Gnoke-OBD2 is a high-performance, modular vehicle diagnostic suite built entirel
 
 
 
-### 🔗 [Live Demo](https://gnoke-obd2.netlify.app)
+### 🔗 [Live Demo](https://edmundsparrow.github.io/Gnoke-OBD2/)
 
 ---
 
