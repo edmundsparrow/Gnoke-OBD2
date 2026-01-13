@@ -1,0 +1,491 @@
+<!--
+ * Gnoke-OBD2 
+ * Copyright (C) 2025-2026 Ekong Ikpe <ekongmikpe@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gnokestation | Professional OBD-II Diagnostic Platform</title>
+    <style>
+        :root {
+            --bg: #efece1;
+            --accent: #1b3a4b;
+            --red: #c33;
+            --green: #166f45;
+            --orange: #e67e22;
+            --blue: #3498db;
+            --panel: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--accent);
+            font-family: 'Segoe UI', sans-serif;
+            padding: 12px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Connection Bar */
+        #connection-bar {
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,.08);
+        }
+
+        #mode {
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 12px;
+            flex: 1;
+        }
+
+        #conn-btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: transform 0.1s;
+        }
+
+        #conn-btn:active { transform: scale(0.95); }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        #status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        /* Tab Navigation */
+        #tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,.08);
+            background: transparent;
+            cursor: pointer;
+            font-size: 11px;
+            color: var(--accent);
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .tab-btn.active {
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,.08);
+        }
+
+        /* Views */
+        .view {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .view.active { display: flex; }
+
+        /* Gauge Styles */
+        .gauge-container {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mini-gauge {
+            background: #fff;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,.08);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mini-gauge-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+        .display-box {
+            background: rgba(255,255,255,.9);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,.06);
+            text-align: center;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+            transition: transform 0.1s;
+        }
+
+        .btn-primary:active { transform: scale(0.98); }
+
+        .btn-secondary {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--accent);
+            background: transparent;
+            color: var(--accent);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* DTC Cards */
+        .dtc-card {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid var(--red);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dtc-code {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--red);
+        }
+
+        .dtc-desc {
+            font-size: 11px;
+            color: #666;
+        }
+
+        /* Chart Canvas */
+        #data-chart {
+            width: 100%;
+            height: 200px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,.08);
+        }
+
+        /* Recorder Controls */
+        .recorder-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .recording-indicator {
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Connection Bar -->
+    <div id="connection-bar">
+        <select id="mode">
+            <option value="serial">USB / Serial</option>
+            <option value="ble">Bluetooth LE</option>
+            <option value="demo" selected>Demo / Simulation</option>
+        </select>
+        <button id="conn-btn" onclick="System.boot()">Connect</button>
+        <div class="status-indicator">
+            <div id="status-dot"></div>
+            <span id="conn-status">Disconnected</span>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+<div id="tabs">
+    <button class="tab-btn active" onclick="showTab('dash', this)">📊 Dashboard</button>
+    <button class="tab-btn" onclick="showTab('dtc', this)">⚠️ Diagnostics</button>
+    <button class="tab-btn" onclick="showTab('readiness', this)">✓ Readiness</button>
+    <button class="tab-btn" onclick="showTab('freezeframe', this)">📸 Freeze Frame</button>
+    <button class="tab-btn" onclick="showTab('vin', this)">🚗 VIN</button>        <!-- NEW -->
+    <button class="tab-btn" onclick="showTab('recorder', this)">📈 Data Logger</button>
+    <button class="tab-btn" onclick="showTab('config', this)">⚙️ Config</button>
+    <button class="tab-btn" onclick="showTab('logs', this)">📜 Logs</button>
+</div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="dash" class="view active">
+        <div class="gauge-container" style="flex-shrink: 0;">
+            <svg viewBox="0 0 100 100" style="width: 200px; height: 200px;">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#e0e0e0" stroke-width="6" 
+                        stroke-dasharray="198 264" transform="rotate(135 50 50)"/>
+                <circle id="gauge-progress" cx="50" cy="50" r="42" fill="none" stroke="var(--accent)" 
+                        stroke-width="6" stroke-dasharray="0 264" transform="rotate(135 50 50)" 
+                        style="transition: stroke-dasharray 0.3s ease;"/>
+                <text x="50" y="48" text-anchor="middle" id="main-val" 
+                      style="font-size: 18px; font-weight: 700; font-family: inherit; fill: var(--accent);">0</text>
+                <text x="50" y="60" text-anchor="middle" style="font-size: 6px; fill: #666;">RPM</text>
+            </svg>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="display-box">
+                <div style="font-size: 10px; opacity: 0.7; font-weight: 600;">SPEED</div>
+                <div id="v-speed" style="font-weight:700; font-size: 28px; color: var(--accent);">0</div>
+                <div style="font-size: 11px; opacity: 0.6;">km/h</div>
+            </div>
+            <div class="display-box">
+                <div style="font-size: 10px; opacity: 0.7; font-weight: 600;">COOLANT</div>
+                <div id="v-temp" style="font-weight:700; font-size: 28px; color: var(--accent);">--</div>
+                <div style="font-size: 11px; opacity: 0.6;">°C</div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+            <div class="mini-gauge">
+                <div class="mini-gauge-label">⛽ Fuel</div>
+                <svg viewBox="0 0 60 60" style="width: 50px; height: 50px;">
+                    <circle cx="30" cy="30" r="25" fill="none" stroke="#e0e0e0" stroke-width="4"/>
+                    <circle id="fuel-ring" cx="30" cy="30" r="25" fill="none" stroke="var(--green)" 
+                            stroke-width="4" stroke-dasharray="0 157" transform="rotate(-90 30 30)"
+                            style="transition: stroke-dasharray 0.3s;"/>
+                    <text x="30" y="35" text-anchor="middle" id="fuel-val" 
+                          style="font-size: 12px; font-weight: 700; fill: var(--accent);">--</text>
+                </svg>
+                <div style="font-size: 10px; opacity: 0.6;">%</div>
+            </div>
+
+            <div class="mini-gauge">
+                <div class="mini-gauge-label">🔋 Battery</div>
+                <svg viewBox="0 0 60 60" style="width: 50px; height: 50px;">
+                    <circle cx="30" cy="30" r="25" fill="none" stroke="#e0e0e0" stroke-width="4"/>
+                    <circle id="batt-ring" cx="30" cy="30" r="25" fill="none" stroke="var(--blue)" 
+                            stroke-width="4" stroke-dasharray="0 157" transform="rotate(-90 30 30)"
+                            style="transition: stroke-dasharray 0.3s;"/>
+                    <text x="30" y="35" text-anchor="middle" id="batt-val" 
+                          style="font-size: 12px; font-weight: 700; fill: var(--accent);">--</text>
+                </svg>
+                <div style="font-size: 10px; opacity: 0.6;">V</div>
+            </div>
+
+            <div class="mini-gauge">
+                <div class="mini-gauge-label">🎚️ Throttle</div>
+                <svg viewBox="0 0 60 60" style="width: 50px; height: 50px;">
+                    <circle cx="30" cy="30" r="25" fill="none" stroke="#e0e0e0" stroke-width="4"/>
+                    <circle id="throttle-ring" cx="30" cy="30" r="25" fill="none" stroke="var(--orange)" 
+                            stroke-width="4" stroke-dasharray="0 157" transform="rotate(-90 30 30)"
+                            style="transition: stroke-dasharray 0.3s;"/>
+                    <text x="30" y="35" text-anchor="middle" id="throttle-val" 
+                          style="font-size: 12px; font-weight: 700; fill: var(--accent);">--</text>
+                </svg>
+                <div style="font-size: 10px; opacity: 0.6;">%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DIAGNOSTICS VIEW -->
+    <div id="dtc" class="view">
+        <div style="display:flex; gap:8px;">
+            <button class="btn-primary" onclick="readDTCs()" style="flex:1;">📋 Read Codes</button>
+            <button class="btn-primary" onclick="clearDTCs()" style="flex:1; background: var(--red);">🗑️ Clear Codes</button>
+        </div>
+        <div id="dtc-list" style="background:#fff; border-radius:8px; padding:12px; flex:1; overflow-y:auto;">
+            <div style="color:#666; text-align:center; padding:20px; font-size: 13px;">
+                No diagnostic codes read yet.<br>Click "Read Codes" to scan vehicle.
+            </div>
+        </div>
+    </div>
+
+    <!-- READINESS MONITORS VIEW -->
+    <div id="readiness" class="view">
+        <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
+            <button class="btn-primary" onclick="readMonitorStatus()">
+                ✓ Check Readiness Status
+            </button>
+        </div>
+        <div id="readiness-list" style="flex: 1; overflow-y: auto;">
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 48px; margin-bottom: 12px;">✓</div>
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+                    Readiness Monitors
+                </div>
+                <div style="font-size: 12px; line-height: 1.5;">
+                    Check if your vehicle is ready for emissions testing.<br>
+                    Click "Check Readiness Status" to scan.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FREEZE FRAME VIEW -->
+    <div id="freezeframe" class="view">
+        <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; gap: 8px;">
+            <button class="btn-primary" onclick="readFreezeFrame()" style="flex: 1;">
+                📸 Read Freeze Frame
+            </button>
+            <button class="btn-secondary" onclick="exportFreezeFrame()">
+                💾 Export
+            </button>
+            <button class="btn-secondary" onclick="clearFreezeFrame()" style="border-color: var(--red); color: var(--red);">
+                🗑️ Clear
+            </button>
+        </div>
+        <div id="freezeframe-content" style="flex: 1; overflow-y: auto;">
+            <!-- Content filled by freezeframe.js -->
+        </div>
+    </div>
+
+    <!-- VIN VIEW -->
+<div id="vin" class="view">
+    <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; gap: 8px;">
+        <button class="btn-primary" onclick="readVIN()" style="flex: 1;">
+            🚗 Read VIN
+        </button>
+        <button class="btn-secondary" onclick="exportVINInfo()">
+            💾 Export
+        </button>
+    </div>
+    <div id="vin-content" style="flex: 1; overflow-y: auto;">
+        <!-- Content filled by vin.js -->
+    </div>
+</div>
+    
+    <!-- DATA RECORDER VIEW -->
+    <div id="recorder" class="view">
+        <div class="recorder-controls">
+            <button id="record-btn" class="btn-primary" onclick="toggleRecording()" style="flex: 1;">
+                🔴 Start Recording
+            </button>
+            <button class="btn-secondary" onclick="exportSession()">
+                💾 Export CSV
+            </button>
+            <button class="btn-secondary" onclick="togglePlayback()">
+                ▶️ Playback
+            </button>
+        </div>
+        
+        <canvas id="data-chart" width="800" height="200"></canvas>
+        
+        <div style="background: white; padding: 12px; border-radius: 8px; font-size: 11px; line-height: 1.5; color: #666;">
+            <strong>📈 Data Recorder</strong><br>
+            • Click "Start Recording" to capture live telemetry<br>
+            • Export sessions to CSV for analysis<br>
+            • Playback recorded data to review performance
+        </div>
+    </div>
+
+    <!-- CONFIG VIEW -->
+    <div id="config" class="view">
+        <div class="display-box" style="text-align: left;">
+            <label style="font-size: 12px; font-weight: 600;">OBD Protocol</label>
+            <select id="protocol" style="width:100%; padding:10px; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc;">
+                <option value="auto">Auto Detect (Recommended)</option>
+                <option value="6">ISO 15765-4 CAN (11-bit/500kbps)</option>
+                <option value="7">ISO 15765-4 CAN (29-bit/500kbps)</option>
+                <option value="8">ISO 15765-4 CAN (11-bit/250kbps)</option>
+                <option value="9">ISO 15765-4 CAN (29-bit/250kbps)</option>
+            </select>
+        </div>
+
+        <div class="display-box" style="text-align: left;">
+            <label style="font-size: 12px; font-weight: 600;">About Gnokestation</label>
+            <p style="font-size: 11px; line-height: 1.5; margin: 8px 0; color: #555;">
+                <strong>Version:</strong> 2.4 Professional<br>
+                <strong>Features:</strong> Real-time diagnostics, freeze frame analysis, readiness monitoring, data recording<br>
+                <strong>Compatible:</strong> All OBD-II vehicles (1996+)<br>
+                <strong>Hardware:</strong> ELM327 via USB, Bluetooth, or WiFi
+            </p>
+        </div>
+    </div>
+
+    <!-- LOGS VIEW -->
+    <div id="logs" class="view" style="background:#fff; border-radius:8px; padding:10px; font-family:monospace; font-size:11px; position: relative;">
+        <div style="position: sticky; top: 0; background: #fff; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+            <span style="font-weight: 600; color: var(--accent);">System Log</span>
+            <div style="display: flex; gap: 6px;">
+                <button onclick="exportLog()" class="btn-secondary" style="border-color: var(--green); color: var(--green);">
+                    💾 Export
+                </button>
+                <button onclick="clearLog()" class="btn-secondary" style="border-color: var(--red); color: var(--red);">
+                    🗑️ Clear
+                </button>
+            </div>
+        </div>
+        <div id="log-content">
+            [System] Initializing Gnokestation OBD-II Platform...<br>
+            [System] Ready for connection.
+        </div>
+    </div>
+
+    <!-- Load all modules -->
+    <script src="script.js"></script>
+</body>
+</html>
