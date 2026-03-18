@@ -16,6 +16,43 @@
 
   <link rel="stylesheet" href="style.css" />
 
+  <!-- PWA -->
+  <link rel="manifest"         href="manifest.json" />
+  <link rel="icon"             type="image/png" href="global.png" />
+  <link rel="apple-touch-icon" href="global.png" />
+  <meta name="theme-color"     content="#7c3626" />
+  <meta name="mobile-web-app-capable"       content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title"   content="OBD2" />
+
+  <!-- Service Worker registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => {
+            console.log('[SW] Registered, scope:', reg.scope);
+
+            // Notify user when a new SW is waiting (new version available)
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // A new version is ready — log it (Updater handles the UI badge)
+                  console.log('[SW] New version ready. Reload to update.');
+                  if (window.System) {
+                    System.log('PWA', 'New app version cached — reload to update.');
+                  }
+                }
+              });
+            });
+          })
+          .catch(err => console.warn('[SW] Registration failed:', err));
+      });
+    }
+  </script>
+
   <!-- Anti-FOUC: apply saved theme before first paint -->
   <script>
     (function () {
@@ -318,34 +355,139 @@
         <h1>Config</h1>
         <p class="sub">Hardware and application settings</p>
       </div>
+      <div class="page-header-actions">
+        <button class="btn-secondary" onclick="Settings.save()">Save</button>
+      </div>
     </div>
 
+    <!-- ── 1. OBD Protocol ──────────────────────────────────── -->
     <div class="config-card">
-      <div class="config-card-title">OBD Protocol</div>
-      <label for="protocol">Protocol override</label>
-      <select id="protocol">
-        <option value="auto">Auto Detect (Recommended)</option>
-        <option value="6">ISO 15765-4 CAN 11-bit 500 kbps</option>
-        <option value="7">ISO 15765-4 CAN 29-bit 500 kbps</option>
-        <option value="8">ISO 15765-4 CAN 11-bit 250 kbps</option>
-        <option value="9">ISO 15765-4 CAN 29-bit 250 kbps</option>
-      </select>
+      <div class="config-card-title">&#128268; OBD Protocol</div>
+      <div class="config-row">
+        <label for="cfg-protocol" class="config-label">
+          Protocol override
+          <span class="config-hint">Auto detects your vehicle's OBD bus. Only change if auto-detect fails.</span>
+        </label>
+        <select id="cfg-protocol" class="config-select" onchange="Settings.mark()">
+          <option value="auto">Auto Detect (Recommended)</option>
+          <option value="6">ISO 15765-4 CAN — 11-bit / 500 kbps</option>
+          <option value="7">ISO 15765-4 CAN — 29-bit / 500 kbps</option>
+          <option value="8">ISO 15765-4 CAN — 11-bit / 250 kbps</option>
+          <option value="9">ISO 15765-4 CAN — 29-bit / 250 kbps</option>
+          <option value="3">ISO 9141-2</option>
+          <option value="4">ISO 14230-4 KWP (5-baud init)</option>
+          <option value="5">ISO 14230-4 KWP (fast init)</option>
+        </select>
+      </div>
     </div>
 
+    <!-- ── 2. Advanced Connection ────────────────────────────── -->
+    <details class="config-card config-advanced" id="cfg-advanced">
+      <summary class="config-advanced-summary">
+        <span>&#128268; Advanced Connection</span>
+        <span class="config-advanced-badge">For Bluetooth / slow adapters</span>
+        <span class="config-advanced-chevron">&#8250;</span>
+      </summary>
+
+      <div class="config-advanced-body">
+        <p class="hint" style="margin-bottom:14px;">
+          Leave these at defaults for USB. If your Bluetooth adapter drops
+          commands or times out frequently, lower the polling rate and raise
+          the delay first before touching the timeout.
+        </p>
+
+        <div class="config-row">
+          <label for="cfg-baud" class="config-label">
+            Serial baud rate
+            <span class="config-hint">USB/Serial only. Has no effect on Bluetooth LE.</span>
+          </label>
+          <select id="cfg-baud" class="config-select" onchange="Settings.mark()">
+            <option value="38400" selected>38400 (Recommended)</option>
+            <option value="9600">9600 (Slow / Legacy)</option>
+            <option value="57600">57600</option>
+            <option value="115200">115200 (Fast)</option>
+          </select>
+        </div>
+
+        <div class="config-row">
+          <label for="cfg-timeout" class="config-label">
+            Command timeout
+            <span class="config-hint">How long to wait for a response before declaring failure.</span>
+          </label>
+          <select id="cfg-timeout" class="config-select" onchange="Settings.mark()">
+            <option value="2000">2 s (Recommended)</option>
+            <option value="1000">1 s (Fast adapter)</option>
+            <option value="3000">3 s (Slow BT adapter)</option>
+            <option value="5000">5 s (Very slow / WiFi)</option>
+          </select>
+        </div>
+
+        <div class="config-row">
+          <label for="cfg-delay" class="config-label">
+            Min command delay
+            <span class="config-hint">Gap between commands. Prevents ELM327 buffer overflow on laggy BT.</span>
+          </label>
+          <select id="cfg-delay" class="config-select" onchange="Settings.mark()">
+            <option value="100">100 ms (USB / fast)</option>
+            <option value="150" selected>150 ms (Recommended)</option>
+            <option value="250">250 ms (Slow BT)</option>
+            <option value="400">400 ms (Very slow BT)</option>
+          </select>
+        </div>
+      </div>
+    </details>
+
+    <!-- ── 3. Storage ────────────────────────────────────────── -->
     <div class="config-card">
-      <div class="config-card-title">About Gnoke OBD2</div>
-      <p class="hint">
-        <strong>Version:</strong> 2.5 Professional<br>
-        <strong>Compatibility:</strong> All OBD-II vehicles (1996+)<br>
-        <strong>Hardware:</strong> ELM327 via USB, Bluetooth LE, or WiFi<br>
-        <strong>Features:</strong> Real-time diagnostics, Mode 06 monitoring,
-        freeze frame analysis, readiness monitors, data recording<br><br>
-        Your data never leaves the device. No server. No account. No tracking.
-      </p>
-      <p style="margin-top:12px;font-family:var(--font-mono);font-size:0.62rem;color:var(--muted);">
-        &copy; 2026 Ekong Ikpe &mdash; Gnoke Suite
-      </p>
+      <div class="config-card-title">&#128190; Storage</div>
+
+      <div class="config-row">
+        <label class="config-label">
+          Export settings
+          <span class="config-hint">Download all current settings as a JSON file for backup or transfer.</span>
+        </label>
+        <button class="btn-secondary" onclick="Settings.exportJSON()">
+          &#8595; Export JSON
+        </button>
+      </div>
+
+      <div class="config-row">
+        <label class="config-label" for="cfg-import">
+          Import settings
+          <span class="config-hint">Load a previously exported settings JSON file.</span>
+        </label>
+        <label class="btn-secondary config-file-label" for="cfg-import">
+          &#8593; Import JSON
+          <input type="file" id="cfg-import" accept=".json"
+                 style="display:none;" onchange="Settings.importJSON(this)">
+        </label>
+      </div>
+
+      <hr class="config-divider" />
+
+      <div class="config-row">
+        <label class="config-label">
+          Clear session recordings
+          <span class="config-hint">Wipes in-memory recorded telemetry from the Data Logger.</span>
+        </label>
+        <button class="btn-secondary config-danger"
+                onclick="Settings.clearRecordings()">
+          Clear Recordings
+        </button>
+      </div>
+
+      <div class="config-row">
+        <label class="config-label">
+          Clear all app data
+          <span class="config-hint">Deletes all stored data (IndexedDB) and resets settings. Theme is preserved.</span>
+        </label>
+        <button class="btn-secondary config-danger"
+                onclick="Settings.clearAll()">
+          Clear All Data
+        </button>
+      </div>
     </div>
+
   </div>
 
 
@@ -603,6 +745,7 @@
   /* ── Boot ────────────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', () => {
     Theme.init();
+    Settings.init();
 
     // Populate About tech table
     renderAboutTech([
@@ -649,7 +792,166 @@
     }, 100);
   });
 
-  /* ── About tech table renderer ───────────────────────────── */
+  /* ── Settings ────────────────────────────────────────────── */
+  /*
+    Persists to localStorage under 'gnoke_obd2_settings'.
+    Exposes window.GnokeSettings so kernel.js / script.js can
+    read baud rate, timeout and delay on next connection attempt.
+  */
+  const Settings = (() => {
+    const KEY = 'gnoke_obd2_settings';
+    let _dirty = false;
+
+    const DEFAULTS = {
+      protocol    : 'auto',
+      baudRate    : 38400,
+      timeout     : 2000,
+      commandDelay: 150,
+    };
+
+    /* Load from storage, merge over defaults */
+    function _load() {
+      try {
+        const raw = localStorage.getItem(KEY);
+        return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : { ...DEFAULTS };
+      } catch (_) {
+        return { ...DEFAULTS };
+      }
+    }
+
+    /* Write current form values to storage */
+    function save() {
+      const cfg = {
+        protocol    : document.getElementById('cfg-protocol')?.value || DEFAULTS.protocol,
+        baudRate    : parseInt(document.getElementById('cfg-baud')?.value)    || DEFAULTS.baudRate,
+        timeout     : parseInt(document.getElementById('cfg-timeout')?.value) || DEFAULTS.timeout,
+        commandDelay: parseInt(document.getElementById('cfg-delay')?.value)   || DEFAULTS.commandDelay,
+      };
+
+      try {
+        localStorage.setItem(KEY, JSON.stringify(cfg));
+        window.GnokeSettings = cfg;
+        _dirty = false;
+        document.querySelector('#config .page-header-actions .btn-secondary')
+          ?.classList.remove('cfg-unsaved');
+        if (window.System) System.log('Config', 'Settings saved');
+      } catch (err) {
+        if (window.System) System.log('Config', 'Save failed: ' + err.message);
+      }
+    }
+
+    /* Mark form as dirty (unsaved changes) */
+    function mark() {
+      _dirty = true;
+      document.querySelector('#config .page-header-actions .btn-secondary')
+        ?.classList.add('cfg-unsaved');
+    }
+
+    /* Apply loaded values to form selects */
+    function _applyToForm(cfg) {
+      const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+      };
+      set('cfg-protocol', cfg.protocol);
+      set('cfg-baud',     cfg.baudRate);
+      set('cfg-timeout',  cfg.timeout);
+      set('cfg-delay',    cfg.commandDelay);
+    }
+
+    /* Export settings as downloadable JSON */
+    function exportJSON() {
+      const cfg = _load();
+      const blob = new Blob(
+        [JSON.stringify(cfg, null, 2)],
+        { type: 'application/json' }
+      );
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement('a');
+      a.href     = url;
+      a.download = `gnoke-obd2-settings-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      if (window.System) System.log('Config', 'Settings exported');
+    }
+
+    /* Import settings from a JSON file picked by the user */
+    function importJSON(input) {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          const merged = { ...DEFAULTS, ...parsed };
+          localStorage.setItem(KEY, JSON.stringify(merged));
+          window.GnokeSettings = merged;
+          _applyToForm(merged);
+          _dirty = false;
+          if (window.System) System.log('Config', 'Settings imported from file');
+        } catch (err) {
+          alert('Invalid settings file. Expected a Gnoke OBD2 JSON export.');
+          if (window.System) System.log('Config', 'Import failed: ' + err.message);
+        }
+        // Reset file input so the same file can be re-selected if needed
+        input.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    /* Clear only the Data Logger's in-memory recordings */
+    function clearRecordings() {
+      if (!confirm('Clear all recorded telemetry sessions?\nThis cannot be undone.')) return;
+      if (window.System?.activeApps?.recorder) {
+        window.System.activeApps.recorder.recordedData = [];
+        if (window.System) System.log('Config', 'Session recordings cleared');
+      }
+      alert('Recordings cleared.');
+    }
+
+    /* Clear IndexedDB + localStorage app data (keep theme) */
+    function clearAll() {
+      if (!confirm(
+        'This will delete all stored diagnostic data and reset settings.\n\n' +
+        'Your theme preference will be kept.\n\nContinue?'
+      )) return;
+
+      // Clear localStorage except theme
+      const theme = localStorage.getItem('gnoke_obd2_theme');
+      localStorage.clear();
+      if (theme) localStorage.setItem('gnoke_obd2_theme', theme);
+
+      // Delete known IndexedDB databases
+      const dbNames = ['gnoke_obd2_db', 'gnoke_[appname]_db'];
+      dbNames.forEach(name => {
+        try { indexedDB.deleteDatabase(name); } catch (_) {}
+      });
+
+      // Also wipe recorder memory
+      if (window.System?.activeApps?.recorder) {
+        window.System.activeApps.recorder.recordedData = [];
+      }
+
+      // Reset form to defaults
+      _applyToForm(DEFAULTS);
+      window.GnokeSettings = { ...DEFAULTS };
+
+      if (window.System) System.log('Config', 'All app data cleared');
+      alert('All data cleared. Reload the page to start fresh.');
+    }
+
+    /* Init: load saved values and apply to form */
+    function init() {
+      const cfg = _load();
+      window.GnokeSettings = cfg;
+      // Defer to next tick so the DOM is fully ready
+      requestAnimationFrame(() => _applyToForm(cfg));
+      if (window.System) System.log('Config', 'Settings loaded');
+    }
+
+    return { save, mark, exportJSON, importJSON, clearRecordings, clearAll, init };
+  })();
   function renderAboutTech(rows) {
     const tbody = document.getElementById('about-tech-table');
     if (!tbody) return;
