@@ -21,6 +21,52 @@
  */
 
 (() => {
+    // Minimal IndexedDB key-value wrapper (replaces window.storage, which
+    // doesn't exist outside Claude's artifact sandbox)
+    const IDBStore = (() => {
+        const DB_NAME = 'gnoke_predictive_db';
+        const STORE = 'kv';
+        let dbPromise = null;
+        function open() {
+            if (dbPromise) return dbPromise;
+            dbPromise = new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, 1);
+                req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+            return dbPromise;
+        }
+        async function get(key) {
+            const db = await open();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE, 'readonly');
+                const req = tx.objectStore(STORE).get(key);
+                req.onsuccess = () => resolve(req.result !== undefined ? { key, value: req.result } : null);
+                req.onerror = () => reject(req.error);
+            });
+        }
+        async function set(key, value) {
+            const db = await open();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE, 'readwrite');
+                tx.objectStore(STORE).put(value, key);
+                tx.oncomplete = () => resolve({ key, value });
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+        async function del(key) {
+            const db = await open();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE, 'readwrite');
+                tx.objectStore(STORE).delete(key);
+                tx.oncomplete = () => resolve({ key, deleted: true });
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+        return { get, set, delete: del };
+    })();
+
     const PredictiveApp = {
         id: 'predictive',
         
@@ -79,9 +125,9 @@
          */
         async loadStoredData() {
             try {
-                const snapshotsData = await window.storage.get(this.storageKeys.snapshots);
-                const predictionsData = await window.storage.get(this.storageKeys.predictions);
-                const lastAnalysisData = await window.storage.get(this.storageKeys.lastAnalysis);
+                const snapshotsData = await IDBStore.get(this.storageKeys.snapshots);
+                const predictionsData = await IDBStore.get(this.storageKeys.predictions);
+                const lastAnalysisData = await IDBStore.get(this.storageKeys.lastAnalysis);
                 
                 if (snapshotsData && snapshotsData.value) {
                     const parsed = JSON.parse(snapshotsData.value);
@@ -174,7 +220,7 @@
          */
         async saveSnapshots() {
             try {
-                await window.storage.set(
+                await IDBStore.set(
                     this.storageKeys.snapshots, 
                     JSON.stringify(this.snapshots)
                 );
@@ -221,8 +267,8 @@
             // Store predictions
             this.lastAnalysisTime = Date.now();
             try {
-                await window.storage.set(this.storageKeys.predictions, JSON.stringify(this.predictions));
-                await window.storage.set(this.storageKeys.lastAnalysis, this.lastAnalysisTime.toString());
+                await IDBStore.set(this.storageKeys.predictions, JSON.stringify(this.predictions));
+                await IDBStore.set(this.storageKeys.lastAnalysis, this.lastAnalysisTime.toString());
             } catch (err) {
                 // Silent fail
             }
@@ -639,9 +685,9 @@
             this.lastAnalysisTime = null;
             
             try {
-                await window.storage.delete(this.storageKeys.snapshots);
-                await window.storage.delete(this.storageKeys.predictions);
-                await window.storage.delete(this.storageKeys.lastAnalysis);
+                await IDBStore.delete(this.storageKeys.snapshots);
+                await IDBStore.delete(this.storageKeys.predictions);
+                await IDBStore.delete(this.storageKeys.lastAnalysis);
             } catch (err) {
                 // Silent fail
             }
