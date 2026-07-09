@@ -38,8 +38,9 @@ window.OBDKernel = class OBDInterface {
      */
     async connectSerial() {
         try {
+            const baudRate = window.GnokeSettings?.baudRate || 38400;
             this.port = await navigator.serial.requestPort();
-            await this.port.open({ baudRate: 38400 });
+            await this.port.open({ baudRate });
             
             this.reader = this.port.readable.getReader();
             this.writer = this.port.writable.getWriter();
@@ -204,6 +205,16 @@ window.OBDKernel = class OBDInterface {
     }
 
     /**
+     * Unified connect entry point used by System.boot()
+     */
+    async connect(mode) {
+        if (mode === 'serial') return this.connectSerial();
+        if (mode === 'ble') return this.connectBLE();
+        System.log('Kernel', `Unknown connection mode: ${mode}`);
+        return false;
+    }
+
+    /**
      * Disconnect and cleanup
      * Called by System.shutdown()
      */
@@ -252,5 +263,6 @@ window.OBDKernel = class OBDInterface {
     }
 };
 
-System.log('Kernel', 'OBD-II Kernel loaded');
+window.System.activeApps.kernel = new window.OBDKernel();
 
+System.log('Kernel', 'OBD-II Kernel loaded');
