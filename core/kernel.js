@@ -266,3 +266,4 @@ window.OBDKernel = class OBDInterface {
 window.System.activeApps.kernel = new window.OBDKernel();
 
 System.log('Kernel', 'OBD-II Kernel loaded');
+
