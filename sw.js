@@ -13,7 +13,7 @@
  *            network-first for everything else (API calls, etc.)
  */
 
-const CACHE_NAME = 'gnoke-obd2-v1';   /* ← bump on every deploy */
+const CACHE_NAME = 'gnoke-obd2-v2';   /* ← bump on every deploy */
 
 const ASSETS = [
 
@@ -46,6 +46,7 @@ const ASSETS = [
   './plugins/vin.js',
   './plugins/engine.js',
   './plugins/monitoring.js',
+  './plugins/predictive.js',
 
   /* ── sql.js CDN (WASM engine) ─────────────────────────────── */
   'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js',

@@ -29,6 +29,7 @@ const PLUGINS = [
      'apps/recorder.js',
      'plugins/engine.js',
      'plugins/monitoring.js',
+     'plugins/predictive.js',
 ];
 
 // ============================================================================

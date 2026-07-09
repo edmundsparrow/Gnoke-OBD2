@@ -97,6 +97,7 @@
       <div class="menu-content">
         <button onclick="switchView('dtc')">⚠️ Fault Codes</button>
         <button onclick="switchView('monitoring')">🔬 Monitoring</button>
+        <button onclick="switchView('predictive')">🔮 Predictive</button>
         <button onclick="switchView('readiness')">✔ Readiness</button>
         <button onclick="switchView('freezeframe')">📸 Freeze Frame</button>
       </div>
@@ -262,6 +263,31 @@
         <div style="font-size:2.4rem;margin-bottom:12px;">&#128300;</div>
         <div style="font-weight:600;margin-bottom:6px;color:var(--text);">On-Board Test Monitoring</div>
         <p class="hint">Advanced component health diagnostics. See test results before fault codes trigger.</p>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── PREDICTIVE ────────────────────────────────────────── -->
+  <div id="predictive" class="view">
+    <div class="page-header">
+      <div>
+        <h1>Predictive</h1>
+        <p class="sub">Forward-looking component health trends</p>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn-secondary" onclick="runPredictiveAnalysis()">Run Analysis</button>
+        <button class="btn-secondary" onclick="exportPredictiveReport()">Export</button>
+        <button class="btn-secondary" onclick="clearPredictiveHistory()">Clear History</button>
+      </div>
+    </div>
+    <div id="predictive-content"
+         style="flex:1;overflow-y:auto;background:var(--surface);
+                border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
+      <div class="dtc-empty" style="padding:40px 20px;">
+        <div style="font-size:2.4rem;margin-bottom:12px;">&#128302;</div>
+        <div style="font-weight:600;margin-bottom:6px;color:var(--text);">Predictive Analysis</div>
+        <p class="hint">Run an analysis to project component wear from recorded snapshots.</p>
       </div>
     </div>
   </div>
@@ -675,6 +701,7 @@
   <div class="drawer-section">Diagnose</div>
   <button class="drawer-btn" onclick="switchView('dtc'); Drawer.close();">&#9888; Fault Codes</button>
   <button class="drawer-btn" onclick="switchView('monitoring'); Drawer.close();">&#128300; Monitoring</button>
+  <button class="drawer-btn" onclick="switchView('predictive'); Drawer.close();">&#128302; Predictive</button>
   <button class="drawer-btn" onclick="switchView('readiness'); Drawer.close();">&#10004; Readiness</button>
   <button class="drawer-btn" onclick="switchView('freezeframe'); Drawer.close();">&#128248; Freeze Frame</button>
 
